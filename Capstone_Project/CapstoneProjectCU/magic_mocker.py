@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import json
 import re
 import sys
@@ -34,7 +35,12 @@ class MagicMocker:
         logging.info('Generating mock data')
         mock_data_dict = {}
         for key,value in schema_dict.items():
-            d_type, data = value.split(':')
+            try:
+                d_type, data = value.split(':')
+            except ValueError:
+                logging.error(f'Wrong pattern of scheme no ":" in value of dictionary')
+                sys.exit(1)
+
             list_pattern = r'\[.*\]'
             rand_f_t_pattern = r'rand\(\d+, \d+\)'
             if d_type == 'timestamp':
@@ -92,12 +98,16 @@ class MagicMocker:
 
     def get_schema_dict(self, json_string):
         logging.info('Getting schema')
-        schema_pattern = r'{(.*?:.*?)*?}'
+        schema_pattern = r'\{.*\}'
         path_pattern = r'^.+/[^/]+\.json$'
 
         if re.fullmatch(schema_pattern, str(json_string)):
-            schema_dict = json.loads(json_string)
-            return schema_dict
+            try:
+                schema_dict = json.loads(json_string)
+                return schema_dict
+            except json.JSONDecodeError as e:
+                logging.error(f'Wrong pattern of scheme {e}')
+                sys.exit(1)
         elif re.fullmatch(path_pattern, str(json_string)):
             try:
                 with open(json_string, 'r') as file:
@@ -130,9 +140,11 @@ class MagicMocker:
     def handle_file_writing(self, start_index, end_index,
                             file_prefixes, directory_path):
         for i in range(start_index, end_index):
+
             lines = [self.get_mocked_data_dict() for _ in range(self.data_lines)]
             file_path = ''.join([directory_path,
                                  str(file_prefixes[i]), '.jsonl'])
+            print(file_path)
             self.file_outputter.write_to_file(lines, file_path)
 
     def run(self):
@@ -167,3 +179,12 @@ class MagicMocker:
                     process_args = (start_index, end_index, file_prefixes, directory_path)
 
                     executor.submit(self.handle_file_writing, *process_args)
+
+def main():
+    mocker = MagicMocker()
+    mocker.run()
+
+if __name__ == '__main__':
+    main()
+
+

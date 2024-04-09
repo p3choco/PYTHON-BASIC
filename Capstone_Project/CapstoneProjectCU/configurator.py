@@ -19,7 +19,6 @@ class Configurator:
                              :['client', 'partner', 'government']\",\"age\":\"int:rand(1, 90)\"}
                              """,
                              'data_lines': '10',
-                             'clear_path': 'True',
                              'multiprocessing': '1',
                              }
         with open('default.ini', 'w') as configfile:
@@ -29,7 +28,7 @@ class Configurator:
     def read_configparser(self):
         logging.info('Reading Default Config')
         config = configparser.ConfigParser()
-        config.read('/Users/pbednarski/Desktop/PYTHON_BASICS/Capstone_Project/CapstoneProjectCU/default.ini')
+        config.read('default.ini')
         logging.info('Reading Default Config successful')
         return config
 
